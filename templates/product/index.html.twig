@@ -3,17 +3,35 @@
 {% block title %}Products{% endblock %}
 
 {% block body %}
-    <div class="row">
-        <div class="col-lg-12">
+    <div class="row mb-2">
+        <div class="col-12">
             <h3>Product List</h3>
-            {# Search Form #}
-            <div class="input-group mb-3">
-                <form method="get" action="{{ path('app_product_index') }}">
-                    <input type="text" name="search" value="{{ search }}" 
-                        placeholder="Search..." class="form-control" aria-describedby="button-addon2">
-                    <button type="submit" class="btn btn-outline-secondary" id="button-addon2">Search</button>
-                </form>
-            </div>
+            <div class="row mt-1 mb-2">
+                <div class="col-sm-12 col-md-6">
+                    {# Search Form #}
+                    <form method="get" action="{{ path('app_product_index') }}">
+                        <div class="input-group mb-3">
+                            <input type="text" 
+                                    name="search" 
+                                    value="{{ search }}" 
+                                    placeholder="Search..." 
+                                    class="form-control" 
+                                    aria-describedby="button-addon2">
+                            <button type="submit" 
+                                    class="btn btn-outline-primary" 
+                                    id="button-addon2">
+                                    Search
+                            </button>
+                            {% if search %}
+                                &nbsp;&nbsp;<a href="{{ path('app_product_index') }}" 
+                                class="btn btn-outline-secondary">
+                                    Reset
+                                </a>
+                            {% endif %}
+                        </div>
+                    </form> 
+                </div>
+            </div>          
             {# Products Table #}
             <div class="table table-responsive">
                 <table class="table">
@@ -61,8 +79,8 @@
                             <td>{{ product.createdAt ? product.createdAt|date('Y-m-d H:i:s', 'Asia/Singapore') : '' }}</td>
                             <td>{{ product.updatedAt ? product.updatedAt|date('Y-m-d H:i:s', 'Asia/Singapore') : '' }}</td>
                             <td>
-                                <a href="{{ path('app_product_show', {'id': product.id}) }}">View</a>
-                                <a href="{{ path('app_product_edit', {'id': product.id}) }}">Edit/Delete</a>
+                                <a href="{{ path('app_product_show', {'id': product.id}) }}" class="btn btn-outline-primary btn-xs">View</a>
+                                <a href="{{ path('app_product_edit', {'id': product.id}) }}" class="btn btn-outline-warning btn-xs">Edit/Delete</a>
                             </td>
                         </tr>
                     {% else %}
@@ -80,11 +98,17 @@
         </div>
     </div>
     
-    <div class="mb-3">
-        <a href="{{ path('app_product_new') }}" class="btn btn-primary btn-sm">Create new</a>
-        <a href="{{ path('app_product_export') }}" class="btn btn-success btn-sm">Export CSV</a>
-        <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#importModal">
-            Import CSV
-        </button>
+    <div class="row mb-3">
+        <div class="col-sm-4">
+            <a href="{{ path('app_product_new') }}" class="btn btn-primary btn-md width-80-percent mb-1">Create new</a>
+        </div>
+        <div class="col-sm-4">
+            <a href="{{ path('app_product_export') }}" class="btn btn-success btn-md width-80-percent mb-1">Export CSV</a>
+        </div>
+         <div class="col-sm-4">
+            <button type="button" class="btn btn-info btn-md width-80-percent" data-bs-toggle="modal" data-bs-target="#importModal">
+                Import CSV
+            </button>
+        </div>
     </div>
 {% endblock %}

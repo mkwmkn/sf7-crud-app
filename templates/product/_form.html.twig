@@ -23,8 +23,15 @@
         {{ form_widget(form.stock_quantity, {'attr': {'class': 'form-control', 'type': 'number'}}) }}
         {{ form_errors(form.stock_quantity) }}
     </div>
-
-    <button type="submit" class="btn btn-primary">Save</button>
+    <div class="row mb-3">
+        <div class="col-sm-4">
+            <button type="submit" class="btn btn-primary btn-md width-80-percent">Save</button>
+        </div>
+        <div class="col-sm-4">
+            <a href="{{ path('app_product_index') }}" class="btn btn-dark btn-md width-80-percent">Cancel</a>
+        </div>
+    </div>
+    
 
 {{ form_end(form) }}
 
