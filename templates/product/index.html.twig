@@ -6,30 +6,60 @@
     <div class="row">
         <div class="col-lg-12">
             <h3>Product List</h3>
+            {# Search Form #}
+            <div class="input-group mb-3">
+                <form method="get" action="{{ path('app_product_index') }}">
+                    <input type="text" name="search" value="{{ search }}" 
+                        placeholder="Search..." class="form-control" aria-describedby="button-addon2">
+                    <button type="submit" class="btn btn-outline-secondary" id="button-addon2">Search</button>
+                </form>
+            </div>
+            {# Products Table #}
             <div class="table table-responsive">
                 <table class="table">
                     <thead>
                         <tr>
                             <th>Id</th>
-                            <th>Name</th>
+                            <th>
+                                <a href="{{ path('app_product_index', {
+                                'sort': 'name', 
+                                'direction': sortField == 'name' ? (sortDirection == 'asc' ? 'desc' : 'asc') : 'asc',
+                                'search': search
+                                }) }}">
+                                    Name&nbsp;{{ sortField == 'name' ? (sortDirection == 'asc' ? '↑' : '↓') : '' }}
+                                </a>
+                                {# {{ knp_pagination_sortable(pagination, 'Name', 'name') }} #}
+                            </th>
+                            <th>
+                                <a href="{{ path('app_product_index', {'sort': 'price', 'direction': sortDirection == 'asc' ? 'desc' : 'asc'}) }}">
+                                    Price&nbsp;{{ sortField == 'price' ? (sortDirection == 'asc' ? '↑' : '↓') : '' }}
+                                </a>
+                            </th>
+                            <th>
+                                <a href="{{ path('app_product_index', {'sort': 'stock_quantity', 'direction': sortDirection == 'asc' ? 'desc' : 'asc'}) }}">
+                                    Stock Quantity&nbsp;{{ sortField == 'stock_quantity' ? (sortDirection == 'asc' ? '↑' : '↓') : '' }}
+                                </a>
+                            </th>
                             <th>Description</th>
-                            <th>Price</th>
-                            <th>Stock quantity</th>
-                            <th>Created At</th>
+                            <th>
+                                <a href="{{ path('app_product_index', {'sort': 'created_at', 'direction': sortDirection == 'asc' ? 'desc' : 'asc'}) }}">
+                                    Created At&nbsp;{{ sortField == 'created_at' ? (sortDirection == 'asc' ? '↑' : '↓') : '' }}
+                                </a>
+                            </th>
                             <th>Updated At</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                    {% for product in products %}
+                    {% for product in pagination %} 
                         <tr>
                             <td>{{ product.id }}</td>
                             <td>{{ product.name }}</td>
-                            <td>{{ product.description }}</td>
-                            <td>{{ product.price }}</td>
+                            <td>{{ product.price|number_format(2, '.', ',') }}</td>
                             <td>{{ product.stockQuantity }}</td>
-                            <td>{{ product.createdAt ? product.createdAt|date('Y-m-d H:i:s') : '' }}</td>
-                            <td>{{ product.updatedAt ? product.updatedAt|date('Y-m-d H:i:s') : '' }}</td>
+                            <td>{{ product.description }}</td>
+                            <td>{{ product.createdAt ? product.createdAt|date('Y-m-d H:i:s', 'Asia/Singapore') : '' }}</td>
+                            <td>{{ product.updatedAt ? product.updatedAt|date('Y-m-d H:i:s', 'Asia/Singapore') : '' }}</td>
                             <td>
                                 <a href="{{ path('app_product_show', {'id': product.id}) }}">View</a>
                                 <a href="{{ path('app_product_edit', {'id': product.id}) }}">Edit/Delete</a>
@@ -42,8 +72,19 @@
                     {% endfor %}
                     </tbody>
                 </table>
+                {# Pagination controls #}
+                <div class="pagination">
+                    {{ knp_pagination_render(pagination) }}
+                </div>
             </div>
         </div>
     </div>
-    <a href="{{ path('app_product_new') }}" class="btn btn-primary btn-sm">Create new</a>
+    
+    <div class="mb-3">
+        <a href="{{ path('app_product_new') }}" class="btn btn-primary btn-sm">Create new</a>
+        <a href="{{ path('app_product_export') }}" class="btn btn-success btn-sm">Export CSV</a>
+        <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#importModal">
+            Import CSV
+        </button>
+    </div>
 {% endblock %}
