@@ -5,15 +5,13 @@ namespace App\Controller;
 use App\Entity\Product;
 use App\Form\ProductType;
 use App\Repository\ProductRepository;
+use App\Service\ZipService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Knp\Component\Pager\PaginatorInterface;
-use Symfony\Component\HttpFoundation\HeaderUtils;
-use Symfony\Component\HttpFoundation\StreamedResponse;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use League\Csv\Writer;
 use League\Csv\Reader;
 
@@ -84,18 +82,21 @@ final class ProductController extends AbstractController
     }
 
     #[Route('/export', name: 'app_product_export', methods: ['GET'])]
-    public function export(ProductRepository $productRepository): Response
+    public function export(ProductRepository $productRepository, ZipService $zipService): Response
     {
-        $products = $productRepository->findAll();
-
-        $response = new StreamedResponse(function() use ($products) {
-            $csv = Writer::createFromStream(fopen('php://output', 'w'));
-            
-            // Add headers
+        //$products = $productRepository->findAll();// load rec by batch/chunk/10 per time & return as a zip
+        $limit = 10;
+        $totalProducts = $productRepository->count([]);
+        $totalTimesToGenerateCsv = ceil($totalProducts/$limit);
+        $tempDir = sys_get_temp_dir() . '/product_exports_' . uniqid();
+        $csvFiles = [];
+        mkdir($tempDir);
+        for($count=0; $count<$totalTimesToGenerateCsv; $count++) {
+            $productsByLimit = $productRepository->getProductsByLimit($limit, $count);
+            $csvFileName = sprintf('%s/products_batch_%d.csv', $tempDir, $count+1);
+            $csv = Writer::createFromPath($csvFileName, 'w+');
             $csv->insertOne(['ID', 'Name', 'Description', 'Price', 'Stock Quantity', 'Created At']);
-            
-            // Add products
-            foreach ($products as $product) {
+            foreach ($productsByLimit as $product) {
                 $csv->insertOne([
                     $product->getId(),
                     $product->getName(),
@@ -105,18 +106,20 @@ final class ProductController extends AbstractController
                     $product->getCreatedAt()->format('Y-m-d H:i:s')
                 ]);
             }
-        });
-
-        $response->headers->set('Content-Type', 'text/csv; charset=utf-8');
-        $disposition = HeaderUtils::makeDisposition(
-            HeaderUtils::DISPOSITION_ATTACHMENT,
-            'products.csv'
-        );
-        $response->headers->set('Content-Disposition', $disposition);
-
-        return $response;
+            $csvFiles[] = $csvFileName;
+        }
+        $zipFileName = $tempDir . '/product_exports_in_csv.zip';
+        try {
+            $zipService->createZip($csvFiles, $zipFileName);
+            $response = $zipService->getZipResponse($zipFileName, 'product_exports_in_csv.zip');
+            return $response;
+        } catch (\Exception $e) {
+            throw new \RuntimeException('Failed to create a ZIP file: ' . $e->getMessage());
+        }
     }
+
     
+
     #[Route('/', name: 'app_product_index', methods: ['GET'])]
     public function index(Request $request, ProductRepository $productRepository, PaginatorInterface $paginator)
     {

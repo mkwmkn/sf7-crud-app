@@ -16,4 +16,12 @@ class ProductRepository extends ServiceEntityRepository
         parent::__construct($registry, Product::class);
     }
 
+    public function getProductsByLimit(int $limit, int $currentCount): array {
+        $firstResultIdx = $currentCount * $limit;
+        return $this->createQueryBuilder('p')
+            ->setFirstResult($firstResultIdx)
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
 }
